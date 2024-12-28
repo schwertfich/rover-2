@@ -5,7 +5,6 @@ import (
 	"embed"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
@@ -13,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"rover/config"
 	"strings"
 	"time"
 
@@ -28,21 +28,6 @@ var TRUE = true
 
 //go:embed ui/dist
 var frontend embed.FS
-
-type arrayFlags []string
-
-func (i arrayFlags) String() string {
-	var ts []string
-	for _, el := range i {
-		ts = append(ts, el)
-	}
-	return strings.Join(ts, ",")
-}
-
-func (i *arrayFlags) Set(value string) error {
-	*i = append(*i, value)
-	return nil
-}
 
 type rover struct {
 	Name             string
@@ -66,72 +51,45 @@ type rover struct {
 }
 
 func main() {
-	var tfPath, workingDir, name, zipFileName, ipPort, planPath, planJSONPath, workspaceName, tfcOrgName, tfcWorkspaceName string
-	var standalone, genImage, showSensitive, getVersion, tfcNewRun bool
-	var tfVarsFiles, tfVars, tfBackendConfigs arrayFlags
-	flag.StringVar(&tfPath, "tfPath", "/usr/local/bin/terraform", "Path to Terraform binary")
-	flag.StringVar(&workingDir, "workingDir", ".", "Path to Terraform configuration")
-	flag.StringVar(&name, "name", "rover", "Configuration name")
-	flag.StringVar(&zipFileName, "zipFileName", "rover", "Standalone zip file name")
-	flag.StringVar(&ipPort, "ipPort", "0.0.0.0:9000", "IP and port for Rover server")
-	flag.StringVar(&planPath, "planPath", "", "Plan file path")
-	flag.StringVar(&planJSONPath, "planJSONPath", "", "Plan JSON file path")
-	flag.StringVar(&workspaceName, "workspaceName", "", "Workspace name")
-	flag.StringVar(&tfcOrgName, "tfcOrg", "", "Terraform Cloud Organization name")
-	flag.StringVar(&tfcWorkspaceName, "tfcWorkspace", "", "Terraform Cloud Workspace name")
-	flag.BoolVar(&standalone, "standalone", false, "Generate standalone HTML files")
-	flag.BoolVar(&showSensitive, "showSensitive", false, "Display sensitive values")
-	flag.BoolVar(&tfcNewRun, "tfcNewRun", false, "Create new Terraform Cloud run")
-	flag.BoolVar(&getVersion, "version", false, "Get current version")
-	flag.BoolVar(&genImage, "genImage", false, "Generate graph image")
-	flag.Var(&tfVarsFiles, "tfVarsFile", "Path to *.tfvars files")
-	flag.Var(&tfVars, "tfVar", "Terraform variable (key=value)")
-	flag.Var(&tfBackendConfigs, "tfBackendConfig", "Path to *.tfbackend files")
-	flag.Parse()
-
-	if getVersion {
-		fmt.Printf("Rover v%s\n", VERSION)
-		return
-	}
-
+	cfg := config.LoadConfig()
 	log.Println("Starting Rover...")
 
-	parsedTfVarsFiles := strings.Split(tfVarsFiles.String(), ",")
-	parsedTfVars := strings.Split(tfVars.String(), ",")
-	parsedTfBackendConfigs := strings.Split(tfBackendConfigs.String(), ",")
+	parsedTfVarsFiles := strings.Split(cfg.TfVarsFiles.String(), ",")
+	parsedTfVars := strings.Split(cfg.TfVars.String(), ",")
+	parsedTfBackendConfigs := strings.Split(cfg.TfBackendConfigs.String(), ",")
 
 	path, err := os.Getwd()
 	if err != nil {
 		log.Fatal(errors.New("Unable to get current working directory"))
 	}
 
-	if planPath != "" {
-		if !strings.HasPrefix(planPath, "/") {
-			planPath = filepath.Join(path, planPath)
+	if cfg.PlanPath != "" {
+		if !strings.HasPrefix(cfg.PlanPath, "/") {
+			cfg.PlanPath = filepath.Join(path, cfg.PlanPath)
 		}
 	}
 
-	if planJSONPath != "" {
-		if !strings.HasPrefix(planJSONPath, "/") {
-			planJSONPath = filepath.Join(path, planJSONPath)
+	if cfg.PlanJSONPath != "" {
+		if !strings.HasPrefix(cfg.PlanJSONPath, "/") {
+			cfg.PlanJSONPath = filepath.Join(path, cfg.PlanJSONPath)
 		}
 	}
 
 	r := rover{
-		Name:             name,
-		WorkingDir:       workingDir,
-		TfPath:           tfPath,
-		PlanPath:         planPath,
-		PlanJSONPath:     planJSONPath,
-		ShowSensitive:    showSensitive,
-		GenImage:         genImage,
+		Name:             cfg.Name,
+		WorkingDir:       cfg.WorkingDir,
+		TfPath:           cfg.TfPath,
+		PlanPath:         cfg.PlanPath,
+		PlanJSONPath:     cfg.PlanJSONPath,
+		ShowSensitive:    cfg.ShowSensitive,
+		GenImage:         cfg.GenImage,
 		TfVarsFiles:      parsedTfVarsFiles,
 		TfVars:           parsedTfVars,
 		TfBackendConfigs: parsedTfBackendConfigs,
-		WorkspaceName:    workspaceName,
-		TFCOrgName:       tfcOrgName,
-		TFCWorkspaceName: tfcWorkspaceName,
-		TFCNewRun:        tfcNewRun,
+		WorkspaceName:    cfg.WorkspaceName,
+		TFCOrgName:       cfg.TFCOrgName,
+		TFCWorkspaceName: cfg.TFCWorkspaceName,
+		TFCNewRun:        cfg.TFCNewRun,
 	}
 
 	// Generate assets
@@ -155,20 +113,20 @@ func main() {
 	}
 	frontendFS := http.FileServer(http.FS(fe))
 
-	if standalone {
-		err = r.generateZip(fe, fmt.Sprintf("%s.zip", zipFileName))
+	if cfg.Standalone {
+		err = r.generateZip(fe, fmt.Sprintf("%s.zip", cfg.ZipFileName))
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		log.Printf("Generated zip file: %s.zip\n", zipFileName)
+		log.Printf("Generated zip file: %s.zip\n", cfg.ZipFileName)
 		return
 	}
 
-	err = r.startServer(ipPort, frontendFS)
+	err = r.startServer(cfg.IPPort, frontendFS)
 	if err != nil {
 		// http.Serve() returns error on shutdown
-		if genImage {
+		if cfg.GenImage {
 			log.Println("Server shut down.")
 		} else {
 			log.Fatalf("Could not start server: %s\n", err.Error())
