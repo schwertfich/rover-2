@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -99,7 +98,7 @@ func LoadConfig() *Config {
 
 	// Version ausgeben
 	if config.GetVersion != "" {
-		fmt.Printf("Rover v%s\n", config.Version)
+		log.Printf("Rover v%s\n", config.Version)
 	}
 
 	return config

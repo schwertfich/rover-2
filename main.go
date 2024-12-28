@@ -57,23 +57,6 @@ func main() {
 	parsedTfVars := strings.Split(cfg.TfVars.String(), ",")
 	parsedTfBackendConfigs := strings.Split(cfg.TfBackendConfigs.String(), ",")
 
-	path, err := os.Getwd()
-	if err != nil {
-		log.Fatal(errors.New("Unable to get current working directory"))
-	}
-
-	if cfg.PlanPath != "" {
-		if !strings.HasPrefix(cfg.PlanPath, "/") {
-			cfg.PlanPath = filepath.Join(path, cfg.PlanPath)
-		}
-	}
-
-	if cfg.PlanJSONPath != "" {
-		if !strings.HasPrefix(cfg.PlanJSONPath, "/") {
-			cfg.PlanJSONPath = filepath.Join(path, cfg.PlanJSONPath)
-		}
-	}
-
 	r := rover{
 		Name:             cfg.Name,
 		WorkingDir:       cfg.WorkingDir,
@@ -92,7 +75,7 @@ func main() {
 	}
 
 	// Generate assets
-	err = r.generateAssets()
+	var err = r.generateAssets()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
