@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,6 +52,7 @@ type Config struct {
 func LoadConfig() *Config {
 	config := &Config{}
 
+	log.Println("Loading configuration...")
 	// Definiere Flags
 	flag.StringVar(&config.TfPath, "tfPath", "/usr/local/bin/terraform", "Path to Terraform binary")
 	flag.StringVar(&config.WorkingDir, "workingDir", ".", "Path to Terraform configuration")
@@ -75,16 +77,15 @@ func LoadConfig() *Config {
 	flag.Parse()
 
 	// Lade Flags in Config
-	config.TfVarsFiles = strings.Split(tfVarsFiles.String(), ",")
-	config.TfVars = strings.Split(tfVars.String(), ",")
-	config.TfBackendConfigs = strings.Split(tfBackendConfigs.String(), ",")
+	config.TfVarsFiles = tfVarsFiles
+	config.TfVars = tfVars
+	config.TfBackendConfigs = tfBackendConfigs
 
 	// Kontrolliere das Arbeitsverzeichnis
 	path, err := os.Getwd()
 	if err != nil {
 		panic(errors.New("unable to get current working directory"))
 	}
-	config.WorkingDir = path
 
 	// Optional: PlanPaths checken
 	if config.PlanPath != "" && !strings.HasPrefix(config.PlanPath, "/") {
@@ -99,7 +100,6 @@ func LoadConfig() *Config {
 	// Version ausgeben
 	if config.GetVersion != "" {
 		fmt.Printf("Rover v%s\n", config.Version)
-		os.Exit(0)
 	}
 
 	return config

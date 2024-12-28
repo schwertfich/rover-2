@@ -53,7 +53,6 @@ type rover struct {
 func main() {
 	cfg := config.LoadConfig()
 	log.Println("Starting Rover...")
-
 	parsedTfVarsFiles := strings.Split(cfg.TfVarsFiles.String(), ",")
 	parsedTfVars := strings.Split(cfg.TfVars.String(), ",")
 	parsedTfBackendConfigs := strings.Split(cfg.TfBackendConfigs.String(), ",")
