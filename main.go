@@ -456,7 +456,3 @@ func saveJSONToFile(prefix string, fileType string, path string, j interface{}) 
 
 	return fmt.Sprintf("%s/%s-%s.json", newpath, prefix, fileType)
 }
-
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-}

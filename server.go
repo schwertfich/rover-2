@@ -77,3 +77,7 @@ func (ro *rover) startServer(ipPort string, frontendFS http.Handler) error {
 	return s.Serve(l)
 
 }
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
