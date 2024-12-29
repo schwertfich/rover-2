@@ -12,7 +12,7 @@ import (
 	// tfjson "github.com/hashicorp/terraform-json"
 )
 
-func (ro *rover) startServer(ipPort string, frontendFS http.Handler) error {
+func (r *rover) startServer(ipPort string, frontendFS http.Handler) error {
 
 	m := http.NewServeMux()
 	s := http.Server{Addr: ipPort, Handler: m}
@@ -34,22 +34,22 @@ func (ro *rover) startServer(ipPort string, frontendFS http.Handler) error {
 
 		switch fileType {
 		case "plan":
-			j, err = json.Marshal(ro.Plan)
+			j, err = json.Marshal(r.Plan)
 			if err != nil {
 				io.WriteString(w, fmt.Sprintf("Error producing plan JSON: %s\n", err))
 			}
 		case "rso":
-			j, err = json.Marshal(ro.RSO)
+			j, err = json.Marshal(r.RSO)
 			if err != nil {
 				io.WriteString(w, fmt.Sprintf("Error producing rso JSON: %s\n", err))
 			}
 		case "map":
-			j, err = json.Marshal(ro.Map)
+			j, err = json.Marshal(r.Map)
 			if err != nil {
 				io.WriteString(w, fmt.Sprintf("Error producing map JSON: %s\n", err))
 			}
 		case "graph":
-			j, err = json.Marshal(ro.Graph)
+			j, err = json.Marshal(r.Graph)
 			if err != nil {
 				io.WriteString(w, fmt.Sprintf("Error producing graph JSON: %s\n", err))
 			}
@@ -69,7 +69,7 @@ func (ro *rover) startServer(ipPort string, frontendFS http.Handler) error {
 	}
 
 	// The browser can connect now because the listening socket is open.
-	if ro.GenImage {
+	if r.GenImage {
 		go screenshot(&s)
 	}
 
