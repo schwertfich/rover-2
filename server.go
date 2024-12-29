@@ -1,83 +1,64 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net"
-	"net/http"
-	"strings"
-	// tfjson "github.com/hashicorp/terraform-json"
 )
 
-func (r *rover) startServer(ipPort string, frontendFS http.Handler) error {
+func (r *rover) startServer(ipPort string) error {
+	// Erstellt eine neue Gin-Instanz
+	router := gin.Default()
 
-	m := http.NewServeMux()
-	s := http.Server{Addr: ipPort, Handler: m}
+	// Aktiviert CORS
+	router.Use(cors.Default())
+	// API-Gruppe unter /api/v1/ bereitstellen
+	api := router.Group("/api")
+	{
+		api.GET("/:fileType", func(c *gin.Context) {
+			fileType := c.Param("fileType")
+			var response interface{}
+			var err error
 
-	m.Handle("/", frontendFS)
-	m.HandleFunc("/health", func(w http.ResponseWriter, request *http.Request) {
-		// simple healthcheck
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		io.WriteString(w, `{"alive": true}`)
-	})
-	m.HandleFunc("/api/", func(w http.ResponseWriter, request *http.Request) {
-		fileType := strings.Replace(request.URL.Path, "/api/", "", 1)
-
-		var j []byte
-		var err error
-
-		enableCors(&w)
-
-		switch fileType {
-		case "plan":
-			j, err = json.Marshal(r.Plan)
-			if err != nil {
-				io.WriteString(w, fmt.Sprintf("Error producing plan JSON: %s\n", err))
+			switch fileType {
+			case "plan":
+				response = r.Plan
+			case "rso":
+				response = r.RSO
+			case "map":
+				response = r.Map
+			case "graph":
+				response = r.Graph
+			default:
+				c.String(400, "Please enter a valid file type: plan, rso, map, graph")
+				return
 			}
-		case "rso":
-			j, err = json.Marshal(r.RSO)
-			if err != nil {
-				io.WriteString(w, fmt.Sprintf("Error producing rso JSON: %s\n", err))
-			}
-		case "map":
-			j, err = json.Marshal(r.Map)
-			if err != nil {
-				io.WriteString(w, fmt.Sprintf("Error producing map JSON: %s\n", err))
-			}
-		case "graph":
-			j, err = json.Marshal(r.Graph)
-			if err != nil {
-				io.WriteString(w, fmt.Sprintf("Error producing graph JSON: %s\n", err))
-			}
-		default:
-			io.WriteString(w, "Please enter a valid file type: plan, rso, map, graph\n")
-		}
 
-		w.Header().Set("Content-Type", "application/json")
-		io.Copy(w, bytes.NewReader(j))
-	})
+			if err != nil {
+				c.JSON(500, gin.H{"error": "Error producing JSON", "details": err.Error()})
+				return
+			}
+			c.JSON(200, response)
+		})
+	}
 
+	// Log-Ausgabe
 	log.Printf("Rover is running on %s", ipPort)
 
+	// Listener erstellen
 	l, err := net.Listen("tcp", ipPort)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// The browser can connect now because the listening socket is open.
+	// Falls Screenshot-Feature erforderlich ist
 	if r.GenImage {
-		go screenshot(&s)
+		log.Printf("Starting screenshot generation for server on %s...", ipPort)
+		go screenshot(ipPort)
+		select {} // blockiert, um Goroutines laufen zu lassen
 	}
 
-	// Start the blocking server loop.
-	return s.Serve(l)
-
-}
-
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	// Server starten
+	return router.RunListener(l)
 }

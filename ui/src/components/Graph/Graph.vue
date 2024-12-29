@@ -12,7 +12,7 @@ import { saveAs } from "file-saver";
 import klay from "cytoscape-klay";
 import svg from 'cytoscape-svg';
 import nodeHtmlLabel from "cytoscape-node-html-label";
-import axios from "axios";
+import apiClient from "@/services/ApiClient";
 
 const config = {
   autounselectify: true,
@@ -509,7 +509,7 @@ export default {
       this.graph = graph;
       this.renderGraph();
     } else {
-      axios.get(`/api/graph`).then((response) => {
+      apiClient.get(`/api/graph`).then((response) => {
         this.graph = response.data;
         //console.log(this.graph)
         this.renderGraph();

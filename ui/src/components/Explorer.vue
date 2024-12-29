@@ -16,7 +16,7 @@
 
 <script>
 import File from "@/components/File.vue";
-import axios from "axios";
+import apiClient from "@/services/ApiClient";
 
 export default {
   name: "Explorer",
@@ -40,7 +40,7 @@ export default {
       // eslint-disable-next-line no-undef
       this.map = map;
     } else {
-      axios.get(`/api/map`).then((response) => {
+      apiClient.get(`/api/map`).then((response) => {
         this.map = response.data;
         //console.log(this.map);
       });

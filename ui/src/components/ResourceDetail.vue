@@ -118,8 +118,8 @@ c
 </template>
 
 <script>
-import axios from "axios";
 import copy from "copy-to-clipboard";
+import apiClient from "@/services/ApiClient";
 
 export default {
   name: "ResourceDetail",
@@ -395,13 +395,14 @@ export default {
     },
   },
   mounted() {
+    console.log("Fetching data from API");
     // if rso.js file is present (standalone mode)
     // eslint-disable-next-line no-undef
     if (typeof rso !== "undefined") {
       // eslint-disable-next-line no-undef
       this.overview = rso;
     } else {
-      axios.get(`/api/rso`).then((response) => {
+      apiClient.get(`/api/rso`).then((response) => {
         this.overview = response.data;
         //console.log(this.overview);
       });

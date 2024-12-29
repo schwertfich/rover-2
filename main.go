@@ -6,7 +6,6 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"io/fs"
 	"log"
-	"net/http"
 	"rover/config"
 	"strings"
 )
@@ -86,7 +85,6 @@ func runApp(r rover, cfg config.Config) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	frontendFS := http.FileServer(http.FS(fe))
 
 	if cfg.Standalone {
 		err = r.generateZip(fe, fmt.Sprintf("%s.zip", cfg.ZipFileName))
@@ -98,7 +96,7 @@ func runApp(r rover, cfg config.Config) {
 		return
 	}
 
-	err = r.startServer(cfg.IPPort, frontendFS)
+	err = r.startServer(cfg.IPPort)
 	if err != nil {
 		// http.Serve() returns error on shutdown
 		if cfg.GenImage {
