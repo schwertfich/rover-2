@@ -18,14 +18,14 @@ func (r *rover) startServer(ipPort string, frontendFS http.Handler) error {
 	s := http.Server{Addr: ipPort, Handler: m}
 
 	m.Handle("/", frontendFS)
-	m.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	m.HandleFunc("/health", func(w http.ResponseWriter, request *http.Request) {
 		// simple healthcheck
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		io.WriteString(w, `{"alive": true}`)
 	})
-	m.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
-		fileType := strings.Replace(r.URL.Path, "/api/", "", 1)
+	m.HandleFunc("/api/", func(w http.ResponseWriter, request *http.Request) {
+		fileType := strings.Replace(request.URL.Path, "/api/", "", 1)
 
 		var j []byte
 		var err error
