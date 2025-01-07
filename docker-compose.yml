@@ -1,0 +1,30 @@
+
+services:
+  frontend:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000" # REST-API wird auf Port 3000 laufen
+    environment:
+      - NODE_ENV=production
+    command: [ "--workingDir", "/app/example/simple-test" ]
+    volumes:
+      - ./example/simple-test:/app/example/simple-test
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
