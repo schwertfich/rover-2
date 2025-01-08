@@ -19,9 +19,9 @@ services:
       - "9000:9000" # REST-API wird auf Port 3000 laufen
     environment:
       - NODE_ENV=production
-    command: [ "--workingDir", "/app/example/simple-test" ]
+    command: [ "--workingDir", "/app/example/random-test" ]
     volumes:
-      - ./example/simple-test:/app/example/simple-test
+      - ./example/random-test:/app/example/random-test
     networks:
       - app-network
 
