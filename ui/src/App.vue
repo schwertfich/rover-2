@@ -9,7 +9,7 @@
       <graph
           ref="filegraph"
           :displayGraph="displayGraph"
-          @getNode="openResourceDetails"
+          v-on:getNode="openResourceDetails"
       />
     </div>
 
