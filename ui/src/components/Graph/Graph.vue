@@ -1,9 +1,6 @@
 <template>
   <transition name="graph">
-    <fieldset>
-      <legend>Graph</legend>
       <cytoscape ref="cy" :config="config" :preConfig="preConfig"></cytoscape>
-    </fieldset>
   </transition>
 </template>
 

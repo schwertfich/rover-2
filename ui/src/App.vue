@@ -1,84 +1,61 @@
 <template>
   <div id="app">
-    <main-nav @saveGraph="saveGraph" />
-    <div class="row">
-      <div class="col col-4-lg">
-        <fieldset>
-          <legend>Legend</legend>
-          <b>Instructions</b>
-          <hr />
-          <p>
-            Click or hover on node to isolate that node's connections. Click on
-            the light purple background to unselect.
-          </p>
-          <p>
-            All resources that the node depends on are represented by a solid
-            line. All resources that depend on the node are represented by a
-            dashed line.
-          </p>
-          <hr />
-          <b>Resource</b>
-          <hr />
-          <div class="node create">Resource - Create</div>
-          <div class="node delete">Resource - Delete</div>
-          <div class="node replace">Resource - Replace</div>
-          <div class="node update">Resource - Update</div>
-          <div class="node no-op">Resource - No Operation</div>
-          <hr />
-          <b>Other items</b>
-          <hr />
-          <div class="node variable">Variable</div>
-          <div class="node output">Output</div>
-          <div class="node data">Data</div>
-          <div class="node module">Module</div>
-          <div class="node locals">Local</div>
-          <hr />
-        </fieldset>
-        <resource-detail :resourceID="resourceID" />
-      </div>
-      <div class="col col-8-lg">
-        <graph
+    <!-- Navigationsleiste -->
+    <main-nav class="fixed-navbar" @saveGraph="saveGraph">
+    </main-nav>
+
+    <!-- Graph -->
+    <div class="graph-container">
+      <graph
           ref="filegraph"
           :displayGraph="displayGraph"
-          v-on:getNode="selectResource"
-        />
-        <explorer @selectResource="selectResource" />
-      </div>
+          @getNode="openResourceDetails"
+      />
     </div>
+
+    <!-- Modals -->
+
+    <resource-modal
+        v-if="resourceID"
+        :resourceID="resourceID"
+        @close="closeResourceModal"
+    />
   </div>
 </template>
 
 <script>
 import MainNav from "@/components/MainNav.vue";
-import ResourceDetail from "@/components/ResourceDetail.vue";
 import Graph from "@/components/Graph/Graph.vue";
-// import SampleGraph from "@/assets/eks-graph.json";
-import Explorer from "@/components/Explorer.vue";
+import ResourceModal from "@/components/modals/ResourceModal.vue";
 
 export default {
   name: "App",
   metaInfo: {
-    title: "Rover | Terraform Visualization",
+    title: "Terraform Visualization",
   },
   components: {
     MainNav,
     Graph,
-    Explorer,
-    ResourceDetail,
+    ResourceModal,
   },
   data() {
     return {
-      displayGraph: true,
-      resourceID: "",
+      displayGraph: true, // Steuerung des Graphen
+      resourceID: "", // ID der aktuell ausgewählten Ressource
     };
   },
   methods: {
     saveGraph() {
-      // this.displayGraph = displayGraph;
+      // Speichere den aktuellen Graph
       this.$refs.filegraph.saveGraph();
     },
-    selectResource(resourceID) {
+    openResourceDetails(resourceID) {
+      // Öffne detaillierte Ansicht für eine Ressource
       this.resourceID = resourceID;
+    },
+    closeResourceModal() {
+      // Schließe das Ressourcen-Detail-Modal
+      this.resourceID = "";
     },
   },
 };
@@ -87,23 +64,32 @@ export default {
 <style scoped>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* text-align: center; */
-  margin: 0 auto;
-  margin-top: 60px;
-  width: 90%;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.node {
-  display: inline-block;
-  margin: 0 1%;
-  width: 48%;
-  font-size: 0.9em;
+/* Positionierung des Graphen */
+.graph-container {
+  flex: 1;
+  height: calc(100% - 60px); /* Abzug der Höhe der MainNav */
+  width: 100%;
+  position: relative;
+}
+.fixed-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+
+  color: white;
+  padding: 10px 20px;
+  z-index: 10; /* Stellt sicher, dass die Navbar über allem liegt */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.module {
-  border: 5px solid #8450ba;
-  color: #8450ba;
-}
 </style>

@@ -1,14 +1,15 @@
 <template>
   <nav class="nav">
     <div class="nav-left">
-      <a class="title" href="https://github.com/im2nguyen/rover">
-        <h2>Rover - Terraform Visualizer</h2>
-      </a>
+        <h2 class="title">Terraform Visualizer</h2>
     </div>
     <div class="nav-right">
       <a id="saveGraph" class="button outline" @click="saveGraph()"
         >Save Graph</a
       >
+      <a id="showLegend" class="button outline" @click="toggleLegend()"
+        >Show Legend</a>
+
       <!-- <a class="button outline" @click="toggleGraph()">{{
         graph ? "Hide Graph" : "Show Graph"
       }}</a> -->
@@ -16,19 +17,28 @@
         colorMode
       }}</a> -->
     </div>
+    <legend-modal v-if="showLegend" @close="toggleLegend" />
   </nav>
 </template>
 
 <script>
+import LegendModal from "@/components/modals/LegendModal.vue";
+
 export default {
   name: "MainNav",
+  components: {LegendModal},
   data() {
     return {
       colorMode: "☀️",
       graph: true,
+      showLegend: false,
     };
   },
   methods: {
+    toggleLegend() {
+      // Zeige oder verstecke die Legende
+      this.showLegend = !this.showLegend;
+    },
     switchMode() {
       const bodyClass = document.body.classList;
       bodyClass.contains("dark")
@@ -71,5 +81,6 @@ export default {
 <style scoped>
 .title {
   padding: 0;
+  color: #181921;
 }
 </style>
