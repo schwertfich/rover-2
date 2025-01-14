@@ -80,18 +80,33 @@ func LoadConfig() *Config {
 	config.TfVars = tfVars
 	config.TfBackendConfigs = tfBackendConfigs
 
-	// Kontrolliere das Arbeitsverzeichnis
 	path, err := os.Getwd()
 	if err != nil {
 		panic(errors.New("unable to get current working directory"))
 	}
 
-	// Optional: PlanPaths checken
-	if config.PlanPath != "" && !strings.HasPrefix(config.PlanPath, "/") {
-		config.PlanPath = filepath.Join(path, config.PlanPath)
+	// Ensure PlanPath is absolute
+	if config.PlanPath != "" {
+		if !filepath.IsAbs(config.PlanPath) {
+			config.PlanPath = filepath.Join(path, config.PlanPath)
+		}
+		absPlanPath, err := filepath.Abs(config.PlanPath)
+		if err != nil {
+			panic(errors.New("unable to get absolute path for PlanPath"))
+		}
+		config.PlanPath = absPlanPath
 	}
-	if config.PlanJSONPath != "" && !strings.HasPrefix(config.PlanJSONPath, "/") {
-		config.PlanJSONPath = filepath.Join(path, config.PlanJSONPath)
+
+	// Ensure PlanJSONPath is absolute
+	if config.PlanJSONPath != "" {
+		if !filepath.IsAbs(config.PlanJSONPath) {
+			config.PlanJSONPath = filepath.Join(path, config.PlanJSONPath)
+		}
+		absPlanJSONPath, err := filepath.Abs(config.PlanJSONPath)
+		if err != nil {
+			panic(errors.New("unable to get absolute path for PlanJSONPath"))
+		}
+		config.PlanJSONPath = absPlanJSONPath
 	}
 
 	config.Version = "0.3.3"
